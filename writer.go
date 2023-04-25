@@ -418,30 +418,33 @@ func (p *MediaPlaylist) Encode() *bytes.Buffer {
 	}
 
 	// default key (workaround for Widevine)
-	if p.Key != nil {
-		p.buf.WriteString("#EXT-X-KEY:")
-		p.buf.WriteString("METHOD=")
-		p.buf.WriteString(p.Key.Method)
-		if p.Key.Method != "NONE" {
-			p.buf.WriteString(",URI=\"")
-			p.buf.WriteString(p.Key.URI)
-			p.buf.WriteRune('"')
-			if p.Key.IV != "" {
-				p.buf.WriteString(",IV=")
-				p.buf.WriteString(p.Key.IV)
-			}
-			if p.Key.Keyformat != "" {
-				p.buf.WriteString(",KEYFORMAT=\"")
-				p.buf.WriteString(p.Key.Keyformat)
+	if len(p.Key) > 0 {
+		for _, key := range p.Key {
+			p.buf.WriteString("#EXT-X-KEY:")
+			p.buf.WriteString("METHOD=")
+			p.buf.WriteString(key.Method)
+			if key.Method != "NONE" {
+				p.buf.WriteString(",URI=\"")
+				p.buf.WriteString(key.URI)
 				p.buf.WriteRune('"')
+				if key.IV != "" {
+					p.buf.WriteString(",IV=")
+					p.buf.WriteString(key.IV)
+				}
+				if key.Keyformat != "" {
+					p.buf.WriteString(",KEYFORMAT=\"")
+					p.buf.WriteString(key.Keyformat)
+					p.buf.WriteRune('"')
+				}
+				if key.Keyformatversions != "" {
+					p.buf.WriteString(",KEYFORMATVERSIONS=\"")
+					p.buf.WriteString(key.Keyformatversions)
+					p.buf.WriteRune('"')
+				}
 			}
-			if p.Key.Keyformatversions != "" {
-				p.buf.WriteString(",KEYFORMATVERSIONS=\"")
-				p.buf.WriteString(p.Key.Keyformatversions)
-				p.buf.WriteRune('"')
-			}
+			p.buf.WriteRune('\n')
+
 		}
-		p.buf.WriteRune('\n')
 	}
 	if p.Map != nil {
 		p.buf.WriteString("#EXT-X-MAP:")
@@ -615,30 +618,32 @@ func (p *MediaPlaylist) Encode() *bytes.Buffer {
 			}
 		}
 		// check for key change
-		if seg.Key != nil && p.Key != seg.Key {
-			p.buf.WriteString("#EXT-X-KEY:")
-			p.buf.WriteString("METHOD=")
-			p.buf.WriteString(seg.Key.Method)
-			if seg.Key.Method != "NONE" {
-				p.buf.WriteString(",URI=\"")
-				p.buf.WriteString(seg.Key.URI)
-				p.buf.WriteRune('"')
-				if seg.Key.IV != "" {
-					p.buf.WriteString(",IV=")
-					p.buf.WriteString(seg.Key.IV)
-				}
-				if seg.Key.Keyformat != "" {
-					p.buf.WriteString(",KEYFORMAT=\"")
-					p.buf.WriteString(seg.Key.Keyformat)
+		for _, key := range p.Key {
+			if seg.Key != nil && key != seg.Key {
+				p.buf.WriteString("#EXT-X-KEY:")
+				p.buf.WriteString("METHOD=")
+				p.buf.WriteString(seg.Key.Method)
+				if seg.Key.Method != "NONE" {
+					p.buf.WriteString(",URI=\"")
+					p.buf.WriteString(seg.Key.URI)
 					p.buf.WriteRune('"')
+					if seg.Key.IV != "" {
+						p.buf.WriteString(",IV=")
+						p.buf.WriteString(seg.Key.IV)
+					}
+					if seg.Key.Keyformat != "" {
+						p.buf.WriteString(",KEYFORMAT=\"")
+						p.buf.WriteString(seg.Key.Keyformat)
+						p.buf.WriteRune('"')
+					}
+					if seg.Key.Keyformatversions != "" {
+						p.buf.WriteString(",KEYFORMATVERSIONS=\"")
+						p.buf.WriteString(seg.Key.Keyformatversions)
+						p.buf.WriteRune('"')
+					}
 				}
-				if seg.Key.Keyformatversions != "" {
-					p.buf.WriteString(",KEYFORMATVERSIONS=\"")
-					p.buf.WriteString(seg.Key.Keyformatversions)
-					p.buf.WriteRune('"')
-				}
+				p.buf.WriteRune('\n')
 			}
-			p.buf.WriteRune('\n')
 		}
 		if seg.Discontinuity {
 			p.buf.WriteString("#EXT-X-DISCONTINUITY\n")
@@ -749,7 +754,7 @@ func (p *MediaPlaylist) SetDefaultKey(method, uri, iv, keyformat, keyformatversi
 	if keyformat != "" || keyformatversions != "" {
 		version(&p.ver, 5)
 	}
-	p.Key = &Key{method, uri, iv, keyformat, keyformatversions}
+	p.Key = []*Key{{method, uri, iv, keyformat, keyformatversions}}
 
 	return nil
 }
