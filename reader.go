@@ -539,10 +539,10 @@ func decodeLineOfMediaPlaylist(p *MediaPlaylist, wv *WV, state *decodingState, l
 			p.Segments[p.last()].Key = &Key{state.xkey.Method, state.xkey.URI, state.xkey.IV, state.xkey.Keyformat, state.xkey.Keyformatversions}
 			// First EXT-X-KEY may appeared in the header of the playlist and linked to first segment
 			// but for convenient playlist generation it also linked as default playlist key
-			if p.Key == nil {
-				p.Key = make([]*Key, 0)
+			if len(p.Keys) == 0 {
+				p.Keys = make([]*Key, 0)
 			}
-			p.Key = append(p.Key, state.xkey)
+			p.Keys = append(p.Keys, state.xkey)
 			state.tagKey = false
 		}
 		// If EXT-X-MAP appeared before reference to segment (EXTINF) then it linked to this segment

@@ -418,8 +418,8 @@ func (p *MediaPlaylist) Encode() *bytes.Buffer {
 	}
 
 	// default key (workaround for Widevine)
-	if len(p.Key) > 0 {
-		for _, key := range p.Key {
+	if len(p.Keys) > 0 {
+		for _, key := range p.Keys {
 			p.buf.WriteString("#EXT-X-KEY:")
 			p.buf.WriteString("METHOD=")
 			p.buf.WriteString(key.Method)
@@ -618,7 +618,7 @@ func (p *MediaPlaylist) Encode() *bytes.Buffer {
 			}
 		}
 		// check for key change
-		for _, key := range p.Key {
+		for _, key := range p.Keys {
 			if seg.Key != nil && key != seg.Key {
 				p.buf.WriteString("#EXT-X-KEY:")
 				p.buf.WriteString("METHOD=")
@@ -754,7 +754,7 @@ func (p *MediaPlaylist) SetDefaultKey(method, uri, iv, keyformat, keyformatversi
 	if keyformat != "" || keyformatversions != "" {
 		version(&p.ver, 5)
 	}
-	p.Key = []*Key{{method, uri, iv, keyformat, keyformatversions}}
+	p.Keys = []*Key{{method, uri, iv, keyformat, keyformatversions}}
 
 	return nil
 }
