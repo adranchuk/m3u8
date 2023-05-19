@@ -1,3 +1,3 @@
-module github.com/adranchuk/m3u8
+module github.com/bldsoft/m3u8
 
 go 1.12
