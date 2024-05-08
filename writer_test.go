@@ -268,7 +268,14 @@ func TestSetKeyForMediaPlaylist(t *testing.T) {
 		if e = p.Append("test01.ts", 5.0, ""); e != nil {
 			t.Errorf("Add 1st segment to a media playlist failed: %s", e)
 		}
-		if e := p.SetKey("AES-128", "https://example.com", "iv", test.KeyFormat, test.KeyFormatVersions); e != nil {
+		keys := NewKeys(Key{
+			Method:            "AES-128",
+			URI:               "https://example.com",
+			IV:                "iv",
+			Keyformat:         test.KeyFormat,
+			Keyformatversions: test.KeyFormatVersions,
+		})
+		if e := p.SetKeys(keys); e != nil {
 			t.Errorf("Set key to a media playlist failed: %s", e)
 		}
 		if p.ver != test.ExpectVersion {
@@ -297,7 +304,14 @@ func TestSetDefaultKeyForMediaPlaylist(t *testing.T) {
 		if e != nil {
 			t.Fatalf("Create media playlist failed: %s", e)
 		}
-		if e := p.SetDefaultKey("AES-128", "https://example.com", "iv", test.KeyFormat, test.KeyFormatVersions); e != nil {
+		keys := NewKeys(Key{
+			Method:            "AES-128",
+			URI:               "https://example.com",
+			IV:                "iv",
+			Keyformat:         test.KeyFormat,
+			Keyformatversions: test.KeyFormatVersions,
+		})
+		if e := p.SetDefaultKeys(keys); e != nil {
 			t.Errorf("Set key to a media playlist failed: %s", e)
 		}
 		if p.ver != test.ExpectVersion {
@@ -479,21 +493,21 @@ func TestEncryptionKeysInMediaPlaylist(t *testing.T) {
 	// Add 5 segments and set custom encryption key
 	for i := uint(0); i < 5; i++ {
 		uri := fmt.Sprintf("uri-%d", i)
-		expected := &Key{
+		expected := NewKeys(Key{
 			Method:            "AES-128",
 			URI:               uri,
 			IV:                fmt.Sprintf("%d", i),
 			Keyformat:         "identity",
 			Keyformatversions: "1",
-		}
+		})
 		_ = p.Append(uri+".ts", 4, "")
-		_ = p.SetKey(expected.Method, expected.URI, expected.IV, expected.Keyformat, expected.Keyformatversions)
+		_ = p.SetKeys(expected)
 
-		if p.Segments[i].Key == nil {
+		if p.Segments[i].Keys == nil {
 			t.Fatalf("Key was not set on segment %v", i)
 		}
-		if *p.Segments[i].Key != *expected {
-			t.Errorf("Key %+v does not match expected %+v", p.Segments[i].Key, expected)
+		if p.Segments[i].Keys != expected {
+			t.Errorf("Key %+v does not match expected %+v", p.Segments[i].Keys, expected)
 		}
 	}
 }
@@ -504,9 +518,16 @@ func TestEncryptionKeyMethodNoneInMediaPlaylist(t *testing.T) {
 		t.Fatalf("Create media playlist failed: %s", e)
 	}
 	p.Append("segment-1.ts", 4, "")
-	p.SetKey("AES-128", "key-uri", "iv", "identity", "1")
+	keys := NewKeys(Key{
+		Method:            "AES-128",
+		URI:               "https://example.com",
+		IV:                "iv",
+		Keyformat:         "identity",
+		Keyformatversions: "1",
+	})
+	p.SetKeys(keys)
 	p.Append("segment-2.ts", 4, "")
-	p.SetKey("NONE", "", "", "", "")
+	p.SetKeys(NewKeys(Key{Method: "NONE"}))
 	expected := `#EXT-X-KEY:METHOD=NONE
 #EXTINF:4.000,
 segment-2.ts`
